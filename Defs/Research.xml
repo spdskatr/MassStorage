@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ResearchProjectDef>
+    <defName>MassStorage</defName>
+    <label>mass storage</label>
+    <description>Your colony is overflowing with stacks of items. There are no plausible storage solutions, and you have exhausted all paths. The only solution is to take a shot in the dark at a rumored long lost Transcendent technology said to be capable of storing millions, BILLIONS of items in a small space...</description>
+    <techLevel>Transcendent</techLevel>
+    <baseCost>3000</baseCost>
+    <prerequisites>
+      <li>ShipBasics</li>
+    </prerequisites>
+    <requiredResearchFacilities>
+      <li>HiTechResearchBench</li>
+      <li>MultiAnalyzer</li>
+    </requiredResearchFacilities>
+    <researchViewX>13</researchViewX>
+    <researchViewY>1</researchViewY>
+  </ResearchProjectDef>
+</Defs>

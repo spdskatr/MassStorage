@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef>
+    <category>Building</category>
+    <thingClass>StockpileAugmentations.Building_MassStorageDevice</thingClass>
+    <soundImpactDefault>BulletImpactMetal</soundImpactDefault>
+    <selectable>true</selectable>
+    <drawerType>MapMeshAndRealTime</drawerType>
+    <repairEffect>Repair</repairEffect>
+    <leaveResourcesWhenKilled>true</leaveResourcesWhenKilled>
+    <filthLeaving>BuildingRubble</filthLeaving>
+    <defName>SingularityAugmentation</defName>
+    <label>mass storage platform</label>
+    <graphicData>
+      <texPath>Augmentation1</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(2,2)</drawSize>
+      <shaderType>CutoutComplex</shaderType>
+    </graphicData>
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>Standable</passability>
+    <blockWind>false</blockWind>
+    <castEdgeShadows>true</castEdgeShadows>
+    <scatterableOnMapGen>false</scatterableOnMapGen>
+    <fillPercent>1</fillPercent>
+    <blockLight>true</blockLight>
+    <statBases>
+      <MaxHitPoints>500</MaxHitPoints>
+      <WorkToBuild>200</WorkToBuild>
+      <Flammability>1.0</Flammability>
+    </statBases>
+    <tickerType>Normal</tickerType>
+    <description>A device that can efficiently and quicky convert items between C3A1(physical) and C0A4(non-physical) form. It can store up to 2 billion non-quality, non-corpse items in itself. Only one type of item allowed. Power consumption: 100W idle, 300W 10 items, 900W 100 items, 2700W 1000 items etc.\n\nEggs stored in internal storage are reset back to 0% and cannot grow in internal storage.</description>
+    <size>(2,2)</size>
+    <CostList>
+      <Steel>300</Steel>
+      <Plasteel>100</Plasteel>
+      <Gold>50</Gold>
+      <Component>10</Component>
+      <ThrumboHorn>1</ThrumboHorn>
+    </CostList>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <basePowerConsumption>100</basePowerConsumption>
+        <startElectricalFires>false</startElectricalFires>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <li Class="CompProperties_Breakdownable"/>
+    </comps>
+    <rotatable>true</rotatable>
+    <terrainAffordanceNeeded>Heavy</terrainAffordanceNeeded>
+    <designationCategory>Production</designationCategory>
+    <building>
+      <ai_chillDestination>false</ai_chillDestination>
+      <ignoreNeedsPower>false</ignoreNeedsPower>
+      <fixedStorageSettings>
+        <filter>
+          <categories>
+            <li>Foods</li>
+            <li>Manufactured</li>
+            <li>ResourcesRaw</li>
+            <li>Items</li>
+            <li>Chunks</li>
+          </categories>
+        </filter>
+      </fixedStorageSettings>
+      <defaultStorageSettings>
+        <priority>Normal</priority>
+        <filter>
+        </filter>
+      </defaultStorageSettings>
+    </building>
+    <inspectorTabs>
+      <li>ITab_Storage</li>
+    </inspectorTabs>
+    <researchPrerequisites>
+      <li>MassStorage</li>
+    </researchPrerequisites>
+  </ThingDef>
+</Defs>

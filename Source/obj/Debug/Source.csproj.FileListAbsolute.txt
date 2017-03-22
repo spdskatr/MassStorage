@@ -1,0 +1,5 @@
+C:\Everything\AWESOME CODE STUFF\RimWorld - Dev tool for modders\Mods\[SS] StockpileAugmentations\Source\bin\Debug\Source.dll
+C:\Everything\AWESOME CODE STUFF\RimWorld - Dev tool for modders\Mods\[SS] StockpileAugmentations\Source\bin\Debug\Source.pdb
+C:\Everything\AWESOME CODE STUFF\RimWorld - Dev tool for modders\Mods\[SS] StockpileAugmentations\Source\obj\Debug\Source.csprojResolveAssemblyReference.cache
+C:\Everything\AWESOME CODE STUFF\RimWorld - Dev tool for modders\Mods\[SS] StockpileAugmentations\Source\obj\Debug\Source.dll
+C:\Everything\AWESOME CODE STUFF\RimWorld - Dev tool for modders\Mods\[SS] StockpileAugmentations\Source\obj\Debug\Source.pdb
