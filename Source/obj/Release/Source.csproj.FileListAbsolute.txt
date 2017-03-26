@@ -1,3 +1,6 @@
 C:\Everything\AWESOME CODE STUFF\RimWorld - Dev tool for modders\Mods\[SS] StockpileAugmentations\Assemblies\StockpileAugmentations.dll
 C:\Everything\AWESOME CODE STUFF\RimWorld - Dev tool for modders\Mods\[SS] StockpileAugmentations\Source\obj\Release\StockpileAugmentations.dll
 C:\Everything\AWESOME CODE STUFF\RimWorld - Dev tool for modders\Mods\[SS] StockpileAugmentations\Source\obj\Release\Source.csprojResolveAssemblyReference.cache
+C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\[SS] MassStorage\Assemblies\MassStorage.dll
+C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\[SS] MassStorage\Source\obj\Release\Source.csprojResolveAssemblyReference.cache
+C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\[SS] MassStorage\Source\obj\Release\MassStorage.dll

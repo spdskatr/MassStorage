@@ -155,6 +155,12 @@ namespace StockpileAugmentations
             if (Find.TickManager.TicksGame % 40 != 0) return;
             //Rest of code executed 40 times less often
             List<IntVec3> clist = GenAdj.CellsOccupiedBy(this).ToList();
+            #region Check for nothing
+            if (clist.FindAll(intvec => intvec.GetFirstItem(Map) != null).NullOrEmpty() && storedDef != null && ThingCount <= 0)
+            {
+                storedDef = null;
+            }
+            #endregion
             #region Output items
             foreach (IntVec3 cell in clist)
             {
