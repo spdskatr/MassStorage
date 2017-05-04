@@ -10,7 +10,7 @@ using FactoryFramework;
 
 namespace StockpileAugmentations
 {
-    public class Building_MassStorageDevice : Building, IInternalStorage, IStoreSettingsParent
+    public class Building_MassStorageDevice : Building, IStoreSettingsParent
     {
         public StorageSettings settings;
         public int ThingCount;
@@ -31,21 +31,7 @@ namespace StockpileAugmentations
         {
             return def.building.fixedStorageSettings;
         }
-        public int thingCount
-        {
-            get
-            {
-                return (int)(ThingCount % 2147483647d);
-            }
-            set
-            {
-                ThingCount = value;
-                //if (value >= thingCount) ThingCount += (value - thingCount);//PLUS |*>*|...|
-                //else if (value >= 0 && thingCount >= 0) ThingCount += (value - thingCount);//MINUS |*<*|...|
-                //else ThingCount += (value - (long)thingCount + 4294967296);//OVERFLOW |***>...|
-            }
-        }
-        public Zone_Stockpile residingZone
+        public Zone_Stockpile ResidingZone
         {
             get
             {
@@ -66,14 +52,14 @@ namespace StockpileAugmentations
                 return 2147483647;
             }
         }
-        public CompPowerTrader powerTraderComp
+        public CompPowerTrader PowerTraderComp
         {
             get
             {
                 return GetComp<CompPowerTrader>();
             }
         }
-        public int itemsStoredExternally
+        public int ItemsStoredExternally
         {
             get
             {
@@ -82,7 +68,7 @@ namespace StockpileAugmentations
                 return i;
             }
         }
-        public bool storedIsRottable
+        public bool StoredIsRottable
         {
             get
             {
@@ -114,8 +100,8 @@ namespace StockpileAugmentations
             string thingName = (storedDef != null) ? ThingCount.ToString() + "x " + storedDef.label.CapitalizeFirst() : "nothing";
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.AppendLine(base.GetInspectString());
-            stringBuilder.AppendFormat("In internal storage: {0} (Item(s) stored externally: {1})", thingName, itemsStoredExternally);
-            if (storedIsRottable)
+            stringBuilder.AppendFormat("In internal storage: {0} (Item(s) stored externally: {1})", thingName, ItemsStoredExternally);
+            if (StoredIsRottable)
             {
                 stringBuilder.AppendLine();
                 stringBuilder.AppendFormat("Spoils in: {0}", TicksUntilRotAtCurrentTemp.ToStringTicksToPeriodVagueMax());
@@ -125,14 +111,14 @@ namespace StockpileAugmentations
         public override void ExposeData()
         {
             base.ExposeData();
-            Scribe_Values.LookValue(ref ThingCount, "thingCount");
-            Scribe_Values.LookValue(ref rotProgressInt, "rotProgress");
-            Scribe_Defs.LookDef(ref storedDef, "storedDef");
-            Scribe_Deep.LookDeep(ref settings, "settings", this);
+            Scribe_Values.Look(ref ThingCount, "thingCount");
+            Scribe_Values.Look(ref rotProgressInt, "rotProgress");
+            Scribe_Defs.Look(ref storedDef, "storedDef");
+            Scribe_Deep.Look(ref settings, "settings", this);
         }
         public override void DeSpawn()
         {
-            dropAll();
+            DropAll();
             base.DeSpawn();
         }
         public override void PostMake()
@@ -147,21 +133,66 @@ namespace StockpileAugmentations
         public override void Tick()
         {
             base.Tick();
-            #region Check power
             float powerMultiplier = (ThingCount > 1) ? (int)Math.Floor(Math.Log10(ThingCount)) : 0;
-            powerTraderComp.powerOutputInt = (float)(Math.Pow(3, powerMultiplier)) * -1 * def.GetCompProperties<CompProperties_Power>().basePowerConsumption;
-            #endregion
-            if (!powerTraderComp.PowerOn) return;
-            if (Find.TickManager.TicksGame % 40 != 0) return;
-            //Rest of code executed 40 times less often
-            List<IntVec3> clist = GenAdj.CellsOccupiedBy(this).ToList();
-            #region Check for nothing
-            if (clist.FindAll(intvec => intvec.GetFirstItem(Map) != null).NullOrEmpty() && storedDef != null && ThingCount <= 0)
+            PowerTraderComp.powerOutputInt = (float)(Math.Pow(2, powerMultiplier)) * -1 * def.GetCompProperties<CompProperties_Power>().basePowerConsumption;
+            if (!PowerTraderComp.PowerOn) return;
+            if (Find.TickManager.TicksGame % 40 == 0)
             {
-                storedDef = null;
+                //Code executed 40 times less often
+                List<IntVec3> clist = GenAdj.CellsOccupiedBy(this).ToList();
+                CheckIfStorageInvalid(clist);
+                TrySpawnItemsAtOutput(clist);
+                if (ResidingZone != null)
+                {
+                    CollectApplicableItems();
+                    TickRottables();
+                }
             }
-            #endregion
-            #region Output items
+        }
+
+        public void TickRottables()
+        {
+            if (storedDef == null || Find.TickManager.TicksAbs % 250 != 0) return;
+            if (StoredIsRottable)
+            {
+                float rotProgress = rotProgressInt;
+                float num = 1f;
+                float temperatureForCell = GenTemperature.GetTemperatureForCell(Position, Map);
+                num *= GenTemperature.RotRateAtTemperature(temperatureForCell);
+                rotProgressInt += Mathf.Round(num * 250f);
+                if (rotProgressInt >= storedDef.GetCompProperties<CompProperties_Rottable>().TicksToRotStart)
+                {
+                    Messages.Message("MessageRottedAwayInStorage".Translate(storedDef.label).CapitalizeFirst(), MessageSound.Silent);
+                    storedDef = null;
+                    ThingCount = 0;
+                    rotProgressInt = 1;
+                }
+            }
+            else
+            {
+                rotProgressInt = 0;
+            }
+        }
+
+        public void CollectApplicableItems()
+        {
+            foreach (IntVec3 cell in ResidingZone.cells)
+            {
+                if (GenAdj.CellsOccupiedBy(this).Any(c => c == cell)) continue;
+                QualityCategory qc;
+                List<Thing> thingsAtCell = (from Thing t in cell.GetThingList(Map)
+                                            where t.def.category == ThingCategory.Item && !(t is Corpse) && t.def.EverHaulable && !t.TryGetQuality(out qc) && !t.def.MadeFromStuff && ((t.TryGetComp<CompForbiddable>() != null) ? !t.TryGetComp<CompForbiddable>().Forbidden : true)
+                                            select t).ToList();
+                foreach (Thing t in thingsAtCell)
+                {
+                    if (!settings.AllowedToAccept(t) || cell.GetThingList(Map).Any(u => u is Building_MassStorageDevice && (u as Building_MassStorageDevice).storedDef == t.def)) continue;
+                    AcceptItem(t);
+                }
+            }
+        }
+
+        public void TrySpawnItemsAtOutput(List<IntVec3> clist)
+        {
             foreach (IntVec3 cell in clist)
             {
                 if (ThingCount <= 0) continue;
@@ -197,46 +228,16 @@ namespace StockpileAugmentations
                 }
 
             }
-            #endregion
-            #region Collect items
-            if (residingZone == null) return;
-            foreach (IntVec3 cell in residingZone.cells)
-            {
-                if (GenAdj.CellsOccupiedBy(this).Any(c => c == cell)) continue;
-                QualityCategory qc;
-                List<Thing> thingsAtCell = (from Thing t in cell.GetThingList(Map)
-                                            where t.def.category == ThingCategory.Item && !(t is Corpse) && t.def.EverHaulable && !t.TryGetQuality(out qc) && !t.def.MadeFromStuff && ((t.TryGetComp<CompForbiddable>() != null) ? !t.TryGetComp<CompForbiddable>().Forbidden : true)
-                                            select t).ToList();
-                foreach (Thing t in thingsAtCell)
-                {
-                    if (!settings.AllowedToAccept(t) || cell.GetThingList(Map).Any(u => u is Building_MassStorageDevice && (u as Building_MassStorageDevice).storedDef == t.def)) continue;
-                    AcceptItem(t);
-                }
-            }
-            #endregion
-            #region Check rottable
-            if (storedDef == null || Find.TickManager.TicksAbs % 250 != 0) return;
-            if (storedIsRottable)
-            {
-                float rotProgress = rotProgressInt;
-                float num = 1f;
-                float temperatureForCell = GenTemperature.GetTemperatureForCell(Position, Map);
-                num *= GenTemperature.RotRateAtTemperature(temperatureForCell);
-                rotProgressInt += Mathf.Round(num * 250f);
-                if (rotProgressInt >= storedDef.GetCompProperties<CompProperties_Rottable>().TicksToRotStart)
-                {
-                    Messages.Message("MessageRottedAwayInStorage".Translate(storedDef.label).CapitalizeFirst(), MessageSound.Silent);
-                    storedDef = null;
-                    ThingCount = 0;
-                    rotProgressInt = 1;
-                }
-            }
-            else
-            {
-                rotProgressInt = 0;
-            }
-            #endregion
         }
+
+        public void CheckIfStorageInvalid(List<IntVec3> clist)
+        {
+            if (clist.FindAll(intvec => intvec.GetFirstItem(Map) != null).NullOrEmpty() && storedDef != null && ThingCount <= 0)
+            {
+                storedDef = null;
+            }
+        }
+
         public override IEnumerable<Gizmo> GetGizmos()
         {
             foreach (Gizmo g in base.GetGizmos()) yield return g;
@@ -251,7 +252,7 @@ namespace StockpileAugmentations
                     icon = ContentFinder<Texture2D>.Get("UI/Buttons/Drop", true),
                     defaultLabel = "DEBUG: Drop all items",
                     defaultDesc = "Drops all items stored in internal storage and disallows the item in storage. WARNING: Some items will be lost if storage exceeds ~300 stacks.",
-                    action = () => dropAll(),
+                    action = () => DropAll(),
                     activateSound = SoundDefOf.Click,
                 };
                 yield return new Command_Action
@@ -261,7 +262,7 @@ namespace StockpileAugmentations
                     action = delegate
                     {
                         if (storedDef == null) storedDef = ThingDefOf.Steel;
-                        thingCount += 1000000;
+                        ThingCount += 1000000;
                     },
                     activateSound = SoundDefOf.Click,
                 };
@@ -285,7 +286,7 @@ namespace StockpileAugmentations
                 storedDef = t.def;
                 if (t.TryGetComp<CompRottable>() != null)
                 {
-                    float ratio = t.stackCount / (thingCount + t.stackCount);
+                    float ratio = t.stackCount / (ThingCount + t.stackCount);
                     rotProgressInt = Mathf.Lerp(rotProgressInt, t.TryGetComp<CompRottable>().RotProgress, ratio);
                 }
                 t.Destroy();
@@ -294,9 +295,9 @@ namespace StockpileAugmentations
             }
             if (storedDef == t.def)
             {
-                if (storedIsRottable)
+                if (StoredIsRottable)
                 {
-                    float ratio = t.stackCount / (thingCount + t.stackCount);
+                    float ratio = t.stackCount / (ThingCount + t.stackCount);
                     rotProgressInt = Mathf.Lerp(rotProgressInt, t.TryGetComp<CompRottable>().RotProgress, ratio);
                 }
                 ThingCount += t.stackCount;
@@ -305,7 +306,7 @@ namespace StockpileAugmentations
                 return;
             }
         }
-        public void dropAll(bool disableItem = false)
+        public void DropAll(bool disableItem = false)
         {
             if (storedDef == null)
             {
