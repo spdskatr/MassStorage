@@ -161,7 +161,7 @@ namespace StockpileAugmentations
                 rotProgressInt += Mathf.Round(num * 250f);
                 if (rotProgressInt >= storedDef.GetCompProperties<CompProperties_Rottable>().TicksToRotStart)
                 {
-                    Messages.Message("MessageRottedAwayInStorage".Translate(storedDef.label).CapitalizeFirst(), MessageSound.Silent);
+                    Messages.Message("MessageRottedAwayInStorage".Translate(storedDef.label).CapitalizeFirst(), MessageTypeDefOf.SilentInput);
                     storedDef = null;
                     ThingCount = 0;
                     rotProgressInt = 1;
